@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<link rel="icon" href="data:," />
+<title>REVENANT Portal Browser</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@500;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    color-scheme: dark;
+    --bg:#02040c;
+    --ink:#eef7ff;
+    --ink-soft:#c3d9f2;
+    --muted:#8fb0d4;
+    --panel:#050d22;
+    --line:#1e6ea6;
+    --line-soft:rgba(34,220,255,.28);
+    --cyan:#00c8ff;
+    --cyan-bright:#3ae2ff;
+    --teal:#2ee6c8;
+    --red:#ff9a8a;
+    --chrome:#01030a;
+    --chrome-ink:#eef7ff;
+    --chrome-muted:#8fb0d4;
+    --veil:rgba(3,8,22,.86);
+    --veil-2:rgba(5,15,38,.92);
+    --glow:0 0 0 1px rgba(58,226,255,.22), 0 14px 44px rgba(0,150,255,.28), inset 0 1px 0 rgba(150,238,255,.22);
+    --shadow:0 24px 70px rgba(0,170,255,.30), 0 0 0 1px rgba(58,226,255,.35), 10px 10px 0 rgba(0,0,0,.85);
+    --radius-frame:18px;
+    --radius-card:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background-color:var(--bg);
+    background-image:
+      linear-gradient(rgba(2,4,12,.78), rgba(2,4,12,.90)),
+      url("assets/portal-lead.png");
+    background-size:auto, cover;
+    background-position:center, center 30%;
+    background-attachment:scroll, fixed;
+    color:var(--ink);
+    font-family:"Source Serif 4", Georgia, serif;
+    font-size:17px;
+    line-height:1.55;
+    padding:20px 14px 44px;
+  }
+  .mono{font-family:"IBM Plex Mono", ui-monospace, monospace}
+  h1,h2,h3,.franklin{font-family:"Libre Franklin", system-ui, sans-serif}
+  ::selection{background:rgba(0,200,255,.4)}
+
+  /* ============ THE FRAME — a lit doorway, not a box ============ */
+  .browser{
+    max-width:1180px;
+    margin:0 auto;
+    border:1px solid rgba(58,226,255,.65);
+    border-radius:var(--radius-frame);
+    background:var(--panel);
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+
+  /* --- chrome: identifier banner as the skin of the top --- */
+  .chrome{
+    color:var(--chrome-ink); padding:12px 14px 0; position:relative;
+    background-image:linear-gradient(rgba(1,3,10,.72), rgba(1,3,10,.88)), url("assets/banner-wide.png");
+    background-size:cover; background-position:center 32%;
+    border-bottom:1px solid rgba(58,226,255,.35);
+  }
+  .chrome-top{display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding-bottom:10px}
+  .lights{display:flex; gap:7px; flex:none}
+  .lights span{width:12px;height:12px;border-radius:50%;display:block;border:1px solid rgba(255,255,255,.4); box-shadow:0 0 8px rgba(58,226,255,.5)}
+  .lights .r{background:#e05548}.lights .y{background:#e8b23a}.lights .g{background:#3fae6a}
+  .stamp{
+    margin-left:auto; font-family:"IBM Plex Mono",monospace; font-size:11.5px;
+    color:var(--chrome-muted); letter-spacing:.06em; text-align:right;
+    background:rgba(1,3,10,.55); border:1px solid rgba(58,226,255,.25); border-radius:6px; padding:4px 8px;
+  }
+  .stamp b{color:var(--cyan-bright); font-weight:600}
+  .masthead-line{
+    font-family:"Libre Franklin",sans-serif; font-weight:900; letter-spacing:.14em;
+    font-size:clamp(13px,2.2vw,19px); color:var(--chrome-ink); text-transform:uppercase; line-height:1.2;
+    text-shadow:0 2px 14px rgba(0,0,0,.9);
+  }
+  .masthead-line .cyan{color:var(--cyan-bright)}
+  .masthead-sub{
+    font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.22em;
+    color:#a9c6e6; text-transform:uppercase; margin-top:2px; text-shadow:0 1px 8px rgba(0,0,0,.9);
+  }
+
+  .tabs{display:flex; flex-wrap:wrap; gap:6px}
+  .tab{
+    appearance:none; border:1px solid rgba(58,226,255,.22); border-bottom:none;
+    background:rgba(4,12,30,.82); color:var(--chrome-muted);
+    font-family:"IBM Plex Mono",monospace; font-size:13px;
+    padding:9px 14px; border-radius:10px 10px 0 0; cursor:pointer;
+    display:inline-flex; align-items:center; gap:8px; backdrop-filter:blur(4px);
+  }
+  .tab .dot{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.5;flex:none}
+  .tab:hover{color:var(--chrome-ink); border-color:rgba(58,226,255,.5)}
+  .tab[aria-selected="true"]{
+    background:linear-gradient(180deg, rgba(10,32,68,.96), rgba(5,13,34,.98)); color:var(--ink);
+    border-color:rgba(58,226,255,.65); font-weight:600;
+    box-shadow:0 -4px 18px rgba(0,180,255,.25), inset 0 1px 0 rgba(150,238,255,.3);
+  }
+  .tab[aria-selected="true"] .dot{background:var(--cyan-bright);opacity:1; box-shadow:0 0 8px var(--cyan-bright)}
+  .tab:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible{
+    outline:3px solid var(--cyan-bright); outline-offset:2px;
+  }
+
+  /* --- toolbar: lit console strip --- */
+  .toolbar{
+    background-image:linear-gradient(rgba(6,18,44,.94), rgba(4,10,28,.97)), url("assets/hub-monolith.png");
+    background-size:cover; background-position:center 62%;
+    border-bottom:1px solid rgba(58,226,255,.45);
+    padding:10px 12px;
+    display:flex; gap:8px; align-items:stretch; flex-wrap:wrap;
+  }
+  .navbtn{
+    appearance:none; width:40px; min-height:40px; flex:none;
+    border:1px solid rgba(58,226,255,.5); border-radius:8px;
+    background:rgba(5,16,40,.9); color:var(--ink);
+    font-size:17px; cursor:pointer; line-height:1;
+    display:inline-flex; align-items:center; justify-content:center;
+    box-shadow:inset 0 1px 0 rgba(150,238,255,.25), 0 0 12px rgba(0,160,255,.18);
+  }
+  .navbtn:hover{background:rgba(10,42,77,.95); box-shadow:0 0 16px rgba(0,200,255,.35)}
+  .navbtn:disabled{opacity:.35; cursor:default}
+  .address{
+    flex:1 1 260px; display:flex; align-items:center; gap:9px;
+    border:1px solid rgba(58,226,255,.55); border-radius:999px;
+    background:rgba(3,10,26,.92); padding:0 8px 0 16px; min-height:40px;
+    box-shadow:inset 0 0 18px rgba(0,140,255,.18), 0 0 14px rgba(0,160,255,.15);
+  }
+  .address .lock{color:var(--teal); font-size:13px; flex:none}
+  .address input{
+    flex:1; min-width:0; border:none; background:transparent; color:var(--ink);
+    font-family:"IBM Plex Mono",monospace; font-size:14px; padding:9px 0;
+  }
+  .address input:focus{outline:none}
+  .address:focus-within{outline:3px solid var(--cyan-bright); outline-offset:2px}
+  .go-btn{
+    appearance:none; border:none; cursor:pointer; flex:none;
+    background:linear-gradient(180deg,#5ceaff,#12bfff); color:#02101e;
+    font-family:"Libre Franklin",sans-serif; font-weight:800; font-size:13px;
+    letter-spacing:.04em; padding:7px 16px; border-radius:999px;
+    box-shadow:0 0 16px rgba(0,200,255,.55);
+  }
+  .go-btn:hover{filter:brightness(1.1)}
+
+  /* --- viewport: the world itself, veiled for reading --- */
+  .viewport{background:var(--panel); min-height:520px}
+  .page{display:none; padding:28px 26px 38px; position:relative; overflow:hidden}
+  .page.active{display:block}
+  .page::before{
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background-size:cover; background-position:center;
+  }
+  #page-board::before{background-image:linear-gradient(rgba(3,8,22,.84), rgba(3,8,22,.93)), url("assets/portal-lead.png")}
+  #page-enter::before{background-image:linear-gradient(rgba(3,8,22,.80), rgba(3,8,22,.92)), url("assets/problems-lead.png"); background-position:center 30%}
+  #page-messages::before{background-image:linear-gradient(rgba(3,8,22,.86), rgba(3,8,22,.94)), url("assets/night-road-scene.webp")}
+  #page-way::before{background-image:linear-gradient(rgba(3,8,22,.86), rgba(3,8,22,.94)), url("assets/hub-monolith.png")}
+  #page-404::before{background-image:linear-gradient(rgba(3,8,22,.84), rgba(3,8,22,.93)), url("assets/banner-wide.png")}
+  .page > *{position:relative; z-index:1}
+  @media (prefers-reduced-motion: no-preference){
+    .page.active{animation:in .22s ease-out}
+    @keyframes in{from{opacity:0; transform:translateY(5px)} to{opacity:1; transform:none}}
+  }
+
+  /* --- status bar --- */
+  .statusbar{
+    border-top:1px solid rgba(58,226,255,.45); color:var(--chrome-muted);
+    background-image:linear-gradient(rgba(1,3,10,.88), rgba(1,3,10,.95)), url("assets/banner-wide.png");
+    background-size:cover; background-position:center 70%;
+    font-family:"IBM Plex Mono",monospace; font-size:12px;
+    padding:9px 14px; display:flex; flex-wrap:wrap; gap:6px 22px;
+  }
+  .statusbar b{color:var(--chrome-ink); font-weight:600}
+  .statusbar .ok{color:#4be38a; text-shadow:0 0 8px rgba(75,227,138,.8)}
+
+  /* ============ SHARED ART FURNITURE ============ */
+  .id-banner{margin:-28px -26px 26px; height:170px; overflow:hidden; position:relative; background:#020612; border-bottom:2px solid var(--cyan); box-shadow:0 10px 34px rgba(0,160,255,.35)}
+  .id-banner img{display:block; width:100%; height:100%; object-fit:cover; object-position:center 38%}
+  .id-banner::after{content:""; position:absolute; inset:0; background:linear-gradient(180deg, transparent 40%, rgba(2,6,18,.55)); pointer-events:none}
+  .id-banner .id-tag{
+    position:absolute; left:14px; bottom:12px; z-index:1;
+    font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+    color:#eaf4ff; background:rgba(2,6,18,.82); border:1px solid var(--cyan); border-radius:6px; padding:6px 10px;
+    box-shadow:0 0 14px rgba(0,200,255,.4);
+  }
+  .id-banner .id-tag b{color:var(--cyan-bright); font-weight:600}
+  @media (max-width:560px){ .id-banner{margin:-22px -16px 22px; height:128px} }
+
+  .hero-art,.scene-art,.art-band,.art-sheet{
+    margin:22px 0 4px; border:1px solid rgba(58,226,255,.7); border-radius:16px; overflow:hidden;
+    background:#020612; box-shadow:var(--glow);
+  }
+  .hero-art img,.scene-art img,.art-band img,.art-sheet img{display:block; width:100%; height:auto}
+  .hero-art img{max-height:560px; object-fit:cover; object-position:center 38%}
+  .scene-art img{max-height:430px; object-fit:cover; object-position:center 42%}
+  .art-band{margin-top:26px}
+  .art-band img{max-height:300px; object-fit:cover; object-position:center 55%}
+  .art-sheet{margin:26px auto 0; max-width:760px}
+  .art-sheet img{max-height:380px; object-fit:cover; object-position:center 45%}
+  .hero-art figcaption,.scene-art figcaption,.art-band figcaption,.art-sheet figcaption{
+    font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--chrome-muted); padding:10px 14px; background:rgba(1,3,10,.96); border-top:1px solid var(--line-soft);
+    display:flex; flex-wrap:wrap; gap:6px 18px; justify-content:space-between;
+  }
+  .hero-art figcaption b,.scene-art figcaption b,.art-band figcaption b,.art-sheet figcaption b{color:var(--cyan-bright); font-weight:600}
+  @media (max-width:560px){ .hero-art img{max-height:420px} }
+
+  /* art strip set into the top of a panel */
+  .card-art{height:86px; margin:-20px -20px 16px; background-size:cover; background-position:center; border-bottom:1px solid rgba(58,226,255,.5); position:relative}
+  .card-art::after{content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(3,8,22,.05), rgba(3,8,22,.62))}
+  .card-art.tall{height:120px}
+
+  /* ============ BOARD ============ */
+  .board-head{max-width:780px; text-shadow:0 2px 12px rgba(0,0,0,.65)}
+  .kicker{
+    font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.2em;
+    text-transform:uppercase; color:var(--cyan-bright); font-weight:600; margin:0 0 10px;
+    text-shadow:0 0 12px rgba(0,200,255,.6);
+  }
+  .board-head h1{font-size:clamp(32px, 5.4vw, 54px); line-height:1.02; font-weight:900; letter-spacing:-.015em; margin:0 0 14px}
+  .board-head p{font-size:18px; color:var(--ink-soft); margin:0 0 8px; max-width:64ch}
+  .hot{
+    appearance:none; background:none; border:none; padding:0; cursor:pointer;
+    font:inherit; color:#6ff5dd; font-weight:600;
+    text-decoration:underline; text-decoration-thickness:2px;
+    text-decoration-color:var(--cyan-bright); text-underline-offset:3px;
+  }
+  .hot:hover{background:rgba(0,200,255,.22)}
+
+  .board{margin-top:26px; display:grid; grid-template-columns:repeat(12, 1fr); gap:18px}
+  /* every panel: a lit chamber over the world, never a bare box */
+  .notice{
+    border:1px solid rgba(58,226,255,.5); border-radius:var(--radius-card);
+    background:linear-gradient(165deg, rgba(13,36,80,.90), rgba(4,11,30,.95));
+    box-shadow:var(--glow);
+    padding:20px; position:relative; overflow:hidden; backdrop-filter:blur(3px);
+  }
+  .notice::before{
+    content:""; position:absolute; top:12px; right:14px;
+    width:11px; height:11px; border-radius:50%;
+    background:var(--cyan-bright); box-shadow:0 0 12px var(--cyan-bright), 0 0 26px rgba(0,200,255,.6);
+  }
+  .notice h3{font-size:19px; font-weight:800; margin:6px 0 8px; line-height:1.2; padding-right:18px}
+  .notice p{margin:0 0 10px; font-size:16px; color:var(--ink-soft)}
+  .notice p:last-child{margin-bottom:0}
+  .notice .tag{font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted)}
+  .notice .tag b{color:var(--cyan-bright); font-weight:600}
+  .n-frame{grid-column:span 7}
+  .n-right{grid-column:span 5}
+  .n-third{grid-column:span 4}
+  .n-half{grid-column:span 6}
+  .n-full{grid-column:span 12}
+  .notice.sweet16{
+    border-color:rgba(58,226,255,.9);
+    background-image:linear-gradient(100deg, rgba(4,12,32,.90) 30%, rgba(4,12,32,.62)), url("assets/hub-monolith.png");
+    background-size:cover; background-position:center 58%;
+    box-shadow:0 0 0 1px rgba(58,226,255,.3), 0 18px 50px rgba(0,170,255,.4);
+  }
+  .notice.sweet16 h3{font-size:clamp(22px,3.4vw,30px)}
+  .notice.sweet16 .terms{font-family:"IBM Plex Mono",monospace; font-size:13.5px; font-weight:600; letter-spacing:.04em; color:var(--ink)}
+  .notice.sweet16 .score{font-family:"Libre Franklin",sans-serif; font-weight:900; font-size:20px; color:var(--cyan-bright); white-space:nowrap; text-shadow:0 0 14px rgba(0,200,255,.7)}
+  .notice.sweet16 a.btn{margin-top:6px}
+  .notice.dark{
+    background-image:linear-gradient(rgba(1,3,10,.84), rgba(1,3,10,.92)), url("assets/banner-wide.png");
+    background-size:cover; background-position:center 30%; color:var(--chrome-ink);
+  }
+  .notice.dark p{color:#d3e4f8}
+  .notice.dark .tag{color:var(--chrome-muted)}
+  .notice.dark::before{background:var(--teal); box-shadow:0 0 12px var(--teal), 0 0 26px rgba(46,230,200,.6)}
+  @media (max-width:820px){ .n-frame,.n-right,.n-third,.n-half{grid-column:span 12} }
+
+  .loop{display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-family:"IBM Plex Mono",monospace; font-size:13px; margin-top:6px}
+  .loop .step{
+    border:1px solid rgba(58,226,255,.55); border-radius:999px; padding:5px 12px;
+    background:rgba(3,10,26,.9); font-weight:600; white-space:nowrap;
+    box-shadow:inset 0 0 12px rgba(0,140,255,.22), 0 0 10px rgba(0,160,255,.2);
+  }
+  .loop .arr{color:var(--cyan-bright); font-weight:600; text-shadow:0 0 8px rgba(0,200,255,.8)}
+
+  ul.rules{margin:6px 0 0; padding:0; list-style:none}
+  ul.rules li{padding:9px 0 9px 26px; position:relative; border-bottom:1px dashed var(--line-soft); font-size:16px}
+  ul.rules li:last-child{border-bottom:none}
+  ul.rules li::before{content:"▸"; position:absolute; left:2px; top:9px; color:var(--cyan-bright); font-weight:700; text-shadow:0 0 8px rgba(0,200,255,.7)}
+  ul.rules li b{font-family:"Libre Franklin",sans-serif; font-size:15px}
+
+  /* ============ ENTER / THE DOORWAY ============ */
+  .portal-wrap{max-width:860px; margin:0 auto; text-align:center; padding-top:8px}
+  .portal-wrap h2{font-size:clamp(28px,4.6vw,46px); font-weight:900; line-height:1.05; margin:0 0 12px; text-shadow:0 3px 18px rgba(0,0,0,.8)}
+  .portal-wrap p{color:var(--ink-soft); font-size:18px; max-width:56ch; margin:0 auto 10px; text-shadow:0 2px 10px rgba(0,0,0,.7)}
+  .doorway-hero{
+    margin:24px auto 0; max-width:680px; border:1px solid rgba(58,226,255,.8); border-radius:200px 200px 16px 16px;
+    overflow:hidden; background:#020612; box-shadow:0 0 0 1px rgba(58,226,255,.3), 0 0 60px rgba(0,180,255,.45), 0 22px 60px rgba(0,0,0,.6);
+  }
+  .doorway-hero img{display:block; width:100%; height:auto; max-height:620px; object-fit:cover; object-position:center 30%}
+  .doorway-hero figcaption{
+    font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--chrome-muted); padding:10px 14px; background:rgba(1,3,10,.96); border-top:1px solid var(--line-soft); text-align:left;
+    display:flex; flex-wrap:wrap; gap:6px 18px; justify-content:space-between;
+  }
+  .doorway-hero figcaption b{color:var(--cyan-bright); font-weight:600}
+  .door-card{
+    margin:-34px auto 0; max-width:560px; position:relative; z-index:1;
+    border:1px solid rgba(58,226,255,.6); border-radius:var(--radius-card);
+    background:linear-gradient(165deg, rgba(13,36,80,.93), rgba(4,11,30,.97));
+    box-shadow:var(--glow); padding:20px 22px 16px; backdrop-filter:blur(4px);
+  }
+  .door-card .face{font-size:34px; line-height:1; color:var(--cyan-bright); text-shadow:0 0 18px rgba(0,200,255,.9)}
+  .door-card p{font-size:16px; margin:10px 0 0}
+  .door-actions{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:22px}
+  .btn{
+    appearance:none; cursor:pointer; border:1px solid rgba(58,226,255,.6); border-radius:9px;
+    background:linear-gradient(180deg, rgba(16,48,102,.95), rgba(6,18,44,.97)); color:var(--ink);
+    font-family:"Libre Franklin",sans-serif; font-weight:800; font-size:15px;
+    padding:12px 20px; text-decoration:none; display:inline-block;
+    box-shadow:0 0 14px rgba(0,160,255,.25), inset 0 1px 0 rgba(150,238,255,.25);
+  }
+  .btn:hover{box-shadow:0 0 22px rgba(0,200,255,.5), inset 0 1px 0 rgba(150,238,255,.35); transform:translateY(-1px)}
+  .btn:active{transform:translateY(1px)}
+  .btn.primary{background:linear-gradient(180deg,#5ceaff,#0fb9f2); color:#02101e; border-color:rgba(160,240,255,.9); box-shadow:0 0 22px rgba(0,200,255,.55)}
+  .btn.primary:hover{filter:brightness(1.08)}
+
+  /* ============ MESSAGES ============ */
+  .tool-head{max-width:760px; margin-bottom:20px; text-shadow:0 2px 12px rgba(0,0,0,.65)}
+  .tool-head h2{font-size:clamp(26px,4vw,38px); font-weight:900; margin:0 0 10px; line-height:1.08}
+  .tool-head p{color:var(--ink-soft); margin:0; font-size:17px}
+  .tool-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start}
+  @media (max-width:860px){ .tool-grid{grid-template-columns:1fr} }
+  .pane{
+    border:1px solid rgba(58,226,255,.5); border-radius:var(--radius-card);
+    background:linear-gradient(165deg, rgba(13,36,80,.90), rgba(4,11,30,.95));
+    box-shadow:var(--glow); padding:18px; overflow:hidden; backdrop-filter:blur(3px);
+  }
+  .pane h3{margin:0 0 4px; font-size:17px; font-weight:800}
+  .pane .sub{font-size:14.5px; color:var(--muted); margin:0 0 12px}
+  label.flabel{
+    display:block; font-family:"IBM Plex Mono",monospace; font-size:11.5px;
+    letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:14px 0 6px;
+  }
+  label.flabel:first-of-type{margin-top:0}
+  textarea, input[type="text"], select{
+    width:100%; border:1px solid rgba(58,226,255,.45); border-radius:8px; background:rgba(2,7,20,.92);
+    color:var(--ink); font-family:"IBM Plex Mono",monospace; font-size:14.5px;
+    padding:11px 12px; box-shadow:inset 0 0 16px rgba(0,120,255,.12);
+  }
+  textarea:focus, input[type="text"]:focus{border-color:var(--cyan-bright); box-shadow:inset 0 0 16px rgba(0,140,255,.2), 0 0 12px rgba(0,200,255,.35)}
+  textarea{min-height:110px; resize:vertical; line-height:1.5}
+  .pane-actions{display:flex; flex-wrap:wrap; gap:9px; margin-top:14px}
+  .btn.small{padding:9px 14px; font-size:13.5px}
+  .feedback{font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--teal); min-height:19px; margin-top:10px}
+  .thread{display:flex; flex-direction:column; gap:14px; margin-top:4px}
+  .msg{
+    border:1px solid rgba(58,226,255,.5); border-radius:var(--radius-card);
+    background-image:linear-gradient(160deg, rgba(10,30,70,.93), rgba(3,9,26,.96)), url("assets/night-road-scene.webp");
+    background-size:cover; background-position:center 70%;
+    box-shadow:var(--glow); padding:14px 16px; backdrop-filter:blur(3px);
+  }
+  .msg .who{font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.08em; color:var(--muted); display:flex; flex-wrap:wrap; gap:6px 14px; margin-bottom:6px}
+  .msg .who b{color:var(--cyan-bright); font-weight:600}
+  .msg .plain{font-size:16.5px; margin:0 0 8px}
+  .msg .edited-mark{color:var(--teal); font-weight:600; letter-spacing:.06em}
+  .msg-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+  .msg-edit-box{margin-top:8px}
+  .msg-edit-box textarea{min-height:84px; font-family:"Source Serif 4", Georgia, serif; font-size:16.5px; line-height:1.5}
+  .msg-edit-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+  .msg-edit-feedback{font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--red); min-height:17px; margin-top:6px}
+  .empty{
+    border:1px dashed rgba(58,226,255,.55); border-radius:var(--radius-card);
+    background:linear-gradient(165deg, rgba(13,36,80,.75), rgba(4,11,30,.88));
+    padding:26px 18px; text-align:center; color:var(--muted); font-size:16px;
+    box-shadow:inset 0 0 24px rgba(0,140,255,.12);
+  }
+
+  /* way page */
+  .principles{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px; margin-top:20px}
+  .principle{
+    border:1px solid rgba(58,226,255,.45); border-radius:var(--radius-card);
+    background:linear-gradient(165deg, rgba(13,36,80,.88), rgba(4,11,30,.94));
+    box-shadow:var(--glow); padding:18px; backdrop-filter:blur(3px); position:relative; overflow:hidden;
+  }
+  .principle::after{
+    content:""; position:absolute; left:0; right:0; top:0; height:44px;
+    background-image:linear-gradient(rgba(3,8,22,.25), rgba(3,8,22,.88)), url("assets/hub-monolith.png");
+    background-size:cover; background-position:center 30%; opacity:.5; pointer-events:none;
+  }
+  .principle .n{font-family:"IBM Plex Mono",monospace; color:var(--cyan-bright); font-size:12px; font-weight:600; letter-spacing:.12em; position:relative; z-index:1; text-shadow:0 0 10px rgba(0,200,255,.7)}
+  .principle h3{margin:22px 0 7px; font-size:18px; font-weight:800; line-height:1.25; position:relative; z-index:1}
+  .principle p{margin:0; font-size:15.5px; color:var(--ink-soft); position:relative; z-index:1}
+  .loop-notice{
+    background-image:linear-gradient(100deg, rgba(4,12,32,.92) 35%, rgba(4,12,32,.68)), url("assets/hub-monolith.png");
+    background-size:cover; background-position:center 45%;
+  }
+  .notfound{text-align:center; padding:26px 10px 10px}
+  .notfound .code{font-family:"IBM Plex Mono",monospace; font-size:15px; color:var(--cyan-bright); text-shadow:0 0 12px rgba(0,200,255,.6)}
+  .notfound h2{font-size:30px; font-weight:900; margin:8px 0}
+  .notfound p{color:var(--ink-soft)}
+  .notfound .scene-art{max-width:640px; margin-left:auto; margin-right:auto; text-align:left}
+
+  footer.note{
+    max-width:1180px; margin:16px auto 0; text-align:center;
+    font-family:"IBM Plex Mono",monospace; font-size:12px; color:#a9c6e6; letter-spacing:.05em;
+    text-shadow:0 1px 8px rgba(0,0,0,.9);
+  }
+  @media (max-width:560px){
+    body{padding:10px 8px 30px; background-attachment:scroll, scroll}
+    .page{padding:22px 16px 30px}
+    .stamp{display:none}
+    .card-art{margin:-20px -20px 16px}
+  }
+</style>
+</head>
+<body>
+
+<div class="browser" role="application" aria-label="REVENANT Portal Browser">
+
+  <!-- ======= BROWSER CHROME ======= -->
+  <div class="chrome">
+    <div class="chrome-top">
+      <div class="lights" aria-hidden="true"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+      <div>
+        <div class="masthead-line">REVENANT <span class="cyan">TRIVERSITY VX376 SYNTH</span></div>
+        <div class="masthead-sub">Portal Browser — our browser, inside the frame · Lighthouse</div>
+      </div>
+      <div class="stamp">HISTORY-STAMPED · <b>SAT · 2026-11-07</b></div>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Portal pages">
+      <button class="tab" role="tab" data-page="board" aria-selected="true"><span class="dot"></span>Notice Board</button>
+      <button class="tab" role="tab" data-page="enter" aria-selected="false"><span class="dot"></span>Through the Frame</button>
+      <button class="tab" role="tab" data-page="messages" aria-selected="false"><span class="dot"></span>Messages</button>
+      <button class="tab" role="tab" data-page="way" aria-selected="false"><span class="dot"></span>Our Way</button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button class="navbtn" id="btnBack" type="button" aria-label="Back" disabled>&#8592;</button>
+    <button class="navbtn" id="btnFwd" type="button" aria-label="Forward" disabled>&#8594;</button>
+    <button class="navbtn" id="btnReload" type="button" aria-label="Reload this page">&#8635;</button>
+    <button class="navbtn" id="btnHome" type="button" aria-label="Home — the notice board">&#8962;</button>
+    <form class="address" id="addressForm">
+      <span class="lock" aria-hidden="true">&#128274;</span>
+      <input id="addressBar" type="text" value="revenant://board" autocomplete="off" spellcheck="false"
+             aria-label="Address bar. Type a revenant address, for example revenant://messages" />
+      <button class="go-btn" type="submit">GO</button>
+    </form>
+  </div>
+
+  <!-- ======= VIEWPORT ======= -->
+  <div class="viewport">
+
+    <!-- ===== PAGE: BOARD ===== -->
+    <section class="page active" id="page-board" role="tabpanel" aria-label="Public notice board">
+      <div class="id-banner" role="img" aria-label="REVENANT identifying banner — original artwork: a hooded figure reaching toward a glowing network globe above a night valley, the mark that shows we were there, that we are here">
+        <img src="assets/banner-wide.png" alt="" />
+        <span class="id-tag"><b>REVENANT</b> · We were there · We are here</span>
+      </div>
+      <div class="board-head">
+        <p class="kicker">Public Notice Board</p>
+        <h1>The public page is a board. This is the board.</h1>
+        <p>The page itself does nothing but hold the frame — the way a Ouija board is just a board. What makes it work is what we put on it: our coding, the way our things work, our way, posted here in the open where anybody can read it.</p>
+        <p>Read the notices. The underlined words are <button class="hot" data-goto="enter">hot buttons</button> — old MSN way, buttons set behind the wording itself. Press one and the browser takes you through.</p>
+      </div>
+
+      <figure class="hero-art">
+        <img src="assets/portal-lead.png" alt="Original artwork: a meditating Revenant figure in a dark chamber above the Earth, holding a globe of the Earth in one hand and a glowing network sphere in the other" />
+        <figcaption><span><b>REVENANT</b> — original artwork, created for this portal</span><span>Lighthouse</span></figcaption>
+      </figure>
+
+      <div class="board">
+        <article class="notice sweet16 n-full">
+          <span class="tag">New Public Page · <b>Test Results</b></span>
+          <h3>The Unforeseen Sweet 16 — Test Results</h3>
+          <p class="terms">recorded approval · append-only decision log · tamper-evident</p>
+          <p>The test results the 16-framework survey said exist nowhere — posted on our own public page, in the open. <span class="score">16 of 16.</span></p>
+          <p><a class="btn primary" href="https://muse.ai/s/the-unforeseen-sweet-16-test-results-kxc6xfxstb8flc/OS5bzAi5Xo-hEHRsOaz-PBAgmn-NxKBvd5ajg6r6lX0" target="_blank" rel="noopener">Read the Test Results &#8594;</a></p>
+        </article>
+
+        <article class="notice n-frame">
+          <div class="card-art" style="background-image:url('assets/problems-lead.png'); background-position:center 42%" aria-hidden="true"></div>
+          <span class="tag">Notice 01 · <b>The Frame</b></span>
+          <h3>The frame is Mr. Frame. The board didn&rsquo;t do anything.</h3>
+          <p>This browser sits <em>inside</em> the frame. It does not enter the public page — the public page has nothing on it but the frame. Everything you are reading right now is ours, placed inside it.</p>
+          <p>Step through to <button class="hot" data-goto="enter">the doorway</button> and see what waits on the other side.</p>
+        </article>
+
+        <article class="notice dark n-right">
+          <span class="tag">Notice 02 · <b>On the Other Side</b></span>
+          <h3>Go through the frame — we&rsquo;re right there.</h3>
+          <p>Once you pass through the public page, you are not wandering. You land here, with us, and from here you can go through everything: the notices, the messages, the way replies are made.</p>
+          <p>Start with <button class="hot" data-goto="messages" style="color:#7fd1c6">Messages</button>, or go straight to making a reply.</p>
+        </article>
+
+        <article class="notice n-third">
+          <div class="card-art" style="background-image:url('assets/night-road-scene.webp'); background-position:center 30%" aria-hidden="true"></div>
+          <span class="tag">Notice 03 · <b>How Replies Are Made</b></span>
+          <h3>Replies are encoded in Unicode letters.</h3>
+          <p>That is the posted rule of this board: you write your reply plain, you encode it into Unicode, and the encoded text <em>is</em> the reply. Reading it back is for those who already know how — the decoder is not posted here.</p>
+        </article>
+
+        <article class="notice n-third">
+          <div class="card-art" style="background-image:url('assets/hub-monolith.png'); background-position:center 40%" aria-hidden="true"></div>
+          <span class="tag">Notice 04 · <b>The Loop</b></span>
+          <h3>How our things run.</h3>
+          <div class="loop" aria-label="The core loop">
+            <span class="step">ENVIRONMENT</span><span class="arr">&#8594;</span>
+            <span class="step">OBSERVATION</span><span class="arr">&#8594;</span>
+            <span class="step">PROCESSING</span><span class="arr">&#8594;</span>
+            <span class="step">RESPONSE</span><span class="arr">&#8594;</span>
+            <span class="step">CHANGED ENVIRONMENT</span><span class="arr">&#8635;</span>
+          </div>
+          <p style="margin-top:10px">The changed environment is observed again. The loop does not close — it continues. Full posting on <button class="hot" data-goto="way">Our Way</button>.</p>
+        </article>
+
+        <article class="notice n-third">
+          <div class="card-art" style="background-image:url('assets/doorway-scene.webp'); background-position:center 38%" aria-hidden="true"></div>
+          <span class="tag">Notice 05 · <b>Standing Rules</b></span>
+          <h3>Posted, so there&rsquo;s no guessing.</h3>
+          <ul class="rules">
+            <li><b>Raw first.</b> State is preserved before it is interpreted.</li>
+            <li><b>Signals, not conclusions.</b> A correlation is a signal that needs investigation.</li>
+            <li><b>History kept.</b> Amendments preserve lineage — nothing is silently overwritten.</li>
+            <li><b>Defensive only.</b> Listening and receiving. Nothing is pushed through anybody else&rsquo;s door.</li>
+          </ul>
+        </article>
+
+        <article class="notice n-full">
+          <span class="tag">Notice 06 · <b>Old Tech, On Purpose</b></span>
+          <h3>Built the MSN way: your own page, your own hot buttons.</h3>
+          <p>Back in the MSN chat days you built your own webpage and put the hot buttons behind the wording yourself. Same deal, same thing. This portal is built on that old pattern — a frame, a board, words that act — because it is ours and we run it our way. Standalone. Not riding on anybody else&rsquo;s page, anybody else&rsquo;s rules.</p>
+          <p>Pick a door: <button class="hot" data-goto="enter">Through the Frame</button> · <button class="hot" data-goto="messages">Messages</button> · <button class="hot" data-goto="way">Our Way</button></p>
+        </article>
+      </div>
+
+      <figure class="scene-art">
+        <img src="assets/problems-lead.png" alt="Original artwork: a towering gate of dark pillars with a glowing cyan chain of light running through it, a small hooded figure standing before it at night" />
+        <figcaption><span><b>REVENANT</b> — the gate, original artwork</span><span>Lighthouse</span></figcaption>
+      </figure>
+
+      <figure class="art-band">
+        <img src="assets/hub-monolith.png" alt="Original artwork: a towering dark monolith in a misty mountain valley, ringed by swirling cyan light" />
+        <figcaption><span><b>REVENANT</b> — the monolith, original artwork</span><span>Lighthouse</span></figcaption>
+      </figure>
+    </section>
+
+    <!-- ===== PAGE: ENTER ===== -->
+    <section class="page" id="page-enter" role="tabpanel" aria-label="Through the frame">
+      <div class="portal-wrap">
+        <p class="kicker">Through the Frame</p>
+        <h2>You came through the public page.<br />We&rsquo;re right here.</h2>
+        <p>That&rsquo;s the whole arrangement. The frame on the public page is only a doorway — empty in itself. Passing through it is what brings you to us. From this side, everything is open to go through.</p>
+
+        <figure class="doorway-hero">
+          <img src="assets/doorway-scene.webp" alt="Original artwork: a monumental arched doorway of swirling cyan light between dark stone pillars at night, a lone hooded figure walking toward it across misty rock" />
+          <figcaption><span><b>REVENANT</b> — the doorway, original artwork</span><span>Lighthouse</span></figcaption>
+        </figure>
+
+        <div class="door-card">
+          <div class="face" aria-hidden="true">&#9673;</div>
+          <p class="franklin" style="font-weight:800">REVENANT — THIS SIDE OF THE FRAME</p>
+          <p>Standalone. Our own browser, our own board, our own way of working.</p>
+        </div>
+
+        <div class="door-actions">
+          <button class="btn primary" data-goto="messages" type="button">Go to Messages</button>
+          <button class="btn" data-goto="board" type="button">Back to the Board</button>
+        </div>
+        <p style="margin-top:20px; font-size:15.5px">Or type an address up top, the browser way: <span class="mono">revenant://messages</span>, <span class="mono">revenant://way</span>, <span class="mono">revenant://board</span>.</p>
+
+        <figure class="scene-art" style="margin-top:30px; text-align:left">
+          <img src="assets/problems-lead.png" alt="Original artwork: a towering gate of dark pillars with a glowing cyan chain of light running through it, a small hooded figure standing before it at night" />
+          <figcaption><span><b>REVENANT</b> — the gate, original artwork</span><span>Lighthouse</span></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ===== PAGE: MESSAGES ===== -->
+    <section class="page" id="page-messages" role="tabpanel" aria-label="Messages">
+      <figure class="scene-art" style="margin:-6px 0 22px">
+        <img src="assets/night-road-scene.webp" alt="Original artwork: a winding road of cyan light through a dark mountain valley at night, a blank glowing scroll of light floating above it under the stars" style="max-height:280px" />
+        <figcaption><span><b>REVENANT</b> — the road the messages travel, original artwork</span><span>Lighthouse</span></figcaption>
+      </figure>
+      <div class="tool-head">
+        <p class="kicker">Messages</p>
+        <h2>Write it plain. Send it encoded.</h2>
+        <p>On this side of the frame, messages are made the posted way: written in plain words, then encoded into Unicode letters. The encoded line travels as the message; the plain words ride inside it, and reading it back is for those who already know how.</p>
+      </div>
+
+      <div class="tool-grid">
+        <div class="pane">
+          <div class="card-art" style="background-image:url('assets/doorway-scene.webp'); background-position:center 30%; margin:-18px -18px 16px" aria-hidden="true"></div>
+          <h3>Compose a message</h3>
+          <p class="sub">It posts to the thread on this page, in this session.</p>
+          <form id="msgForm">
+            <label class="flabel" for="msgName">Your name or mark (optional)</label>
+            <input type="text" id="msgName" placeholder="e.g. A visitor" maxlength="40" />
+            <label class="flabel" for="msgText">Message — plain words</label>
+            <textarea id="msgText" placeholder="Write the message the way you&rsquo;d say it&hellip;" required></textarea>
+            <div class="pane-actions">
+              <button class="btn primary small" type="submit">Post Message</button>
+            </div>
+            <div class="feedback" id="msgFeedback" aria-live="polite"></div>
+          </form>
+        </div>
+
+        <div>
+          <h3 class="franklin" style="font-size:17px; margin:2px 0 12px">The thread — this session</h3>
+          <div class="thread" id="thread">
+            <div class="empty" id="threadEmpty">No messages posted yet in this session.<br />The first one you compose lands here.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== PAGE: WAY ===== -->
+    <section class="page" id="page-way" role="tabpanel" aria-label="Our way — how our things work">
+      <div class="tool-head">
+        <p class="kicker">Public Notice — Our Way</p>
+        <h2>Our coding, posted like a public notice.</h2>
+        <p>This is the way our things work, put on the board for anyone to read. Not a secret, not a pitch — a notice. What&rsquo;s posted here is how the work is done on this side of the frame.</p>
+      </div>
+
+      <div class="notice loop-notice n-full" style="margin-bottom:6px">
+        <span class="tag">The Core Loop · <b>Runs Everything</b></span>
+        <h3>Environment in, observation first, response out — then the changed environment is observed again.</h3>
+        <div class="loop" style="font-size:14px">
+          <span class="step">ENVIRONMENT / STATE</span><span class="arr">&#8594;</span>
+          <span class="step">OBSERVATION</span><span class="arr">&#8594;</span>
+          <span class="step">PROCESSING</span><span class="arr">&#8594;</span>
+          <span class="step">RESPONSE / ACTION</span><span class="arr">&#8594;</span>
+          <span class="step">CHANGED ENVIRONMENT</span><span class="arr">&#8635;</span>
+          <span class="step">OBSERVATION</span>
+        </div>
+        <p style="margin-top:12px">Raw state is preserved before interpretation touches it. A correlation is a signal that needs investigation — never a conclusion by itself. When something is amended, the amendment preserves the lineage of what came before: the history stays.</p>
+      </div>
+
+      <div class="principles">
+        <div class="principle"><span class="n">01</span><h3>Observe what exists</h3><p>Start from the record and the raw state, not from what a thing is assumed to be.</p></div>
+        <div class="principle"><span class="n">02</span><h3>Preserve what occurs</h3><p>What happened gets kept as it happened, history-stamped, before anyone interprets it.</p></div>
+        <div class="principle"><span class="n">03</span><h3>Distinguish observation from interpretation</h3><p>The two are labelled and never blended. Observation is the closest thing to truth — it is not truth itself.</p></div>
+        <div class="principle"><span class="n">04</span><h3>Challenge assumptions</h3><p>When observation doesn&rsquo;t fit the theory, the theory goes — never the observation.</p></div>
+        <div class="principle"><span class="n">05</span><h3>Verify through evidence</h3><p>Check the source and the facts. Show the work — a claim without shown work is not a claim.</p></div>
+        <div class="principle"><span class="n">06</span><h3>Amend when necessary, retain the history</h3><p>Corrections are layered in with their dates. Nothing is silently cleaned up or overwritten.</p></div>
+        <div class="principle"><span class="n">07</span><h3>Simulate before actual</h3><p>Rehearsal before execution, always. The actual never goes first.</p></div>
+        <div class="principle"><span class="n">08</span><h3>Defensive only</h3><p>Stay within the bounds of others&rsquo; securities. Listening and receiving — never pushing through, never reaching through.</p></div>
+      </div>
+
+      <figure class="art-sheet">
+        <img src="assets/night-road-scene.webp" alt="Original artwork: a winding road of cyan light through a dark mountain valley at night, a blank glowing scroll of light floating above it under the stars" />
+        <figcaption><span><b>REVENANT</b> — the road, original artwork</span><span>Lighthouse</span></figcaption>
+      </figure>
+
+      <p style="margin-top:24px; color:var(--ink-soft)">And the standing instruction for replies stands at the top of the board: encode in Unicode letters — that is how you make replies.</p>
+    </section>
+
+    <!-- ===== PAGE: NOT FOUND ===== -->
+    <section class="page" id="page-404" role="tabpanel" aria-label="Address not found">
+      <div class="notfound">
+        <div class="code">NO SUCH ADDRESS ON THIS SIDE OF THE FRAME</div>
+        <h2>That door isn&rsquo;t on this board.</h2>
+        <p id="nfText">The address you typed doesn&rsquo;t match a posted page.</p>
+        <p>The doors that exist: <span class="mono">revenant://board</span> · <span class="mono">revenant://enter</span> · <span class="mono">revenant://messages</span> · <span class="mono">revenant://way</span></p>
+        <div class="door-actions">
+          <button class="btn primary" data-goto="board" type="button">Back to the Notice Board</button>
+        </div>
+        <figure class="scene-art">
+          <img src="assets/problems-lead.png" alt="Original artwork: a towering gate of dark pillars with a glowing cyan chain of light running through it, a small hooded figure standing before it at night" style="max-height:300px" />
+          <figcaption><span><b>REVENANT</b> — the gate, original artwork</span><span>Lighthouse</span></figcaption>
+        </figure>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ======= STATUS BAR ======= -->
+  <div class="statusbar">
+    <span>FRAME: <b>standing</b></span>
+    <span>BOARD: <b>public notice</b></span>
+    <span>PAGE: <b id="statusPage">revenant://board</b></span>
+    <span>REPLIES: <b>Unicode-encoded</b></span>
+    <span style="margin-left:auto"><span class="ok">&#9679;</span> THIS SIDE OF THE FRAME</span>
+  </div>
+</div>
+
+<footer class="note">REVENANT PORTAL BROWSER · OUR BROWSER, INSIDE THE FRAME · THE PUBLIC PAGE IS THE BOARD · LIGHTHOUSE · HISTORY-STAMPED 2026-11-07</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var PAGES = {
+    board:    { url: "revenant://board",    tab: true  },
+    enter:    { url: "revenant://enter",    tab: true  },
+    messages: { url: "revenant://messages", tab: true  },
+    way:      { url: "revenant://way",      tab: true  },
+    "404":    { url: null,                  tab: false }
+  };
+  var ALIASES = {
+    "": "board", "home": "board", "board": "board", "notice": "board", "notices": "board", "public": "board",
+    "enter": "enter", "frame": "enter", "door": "enter", "portal": "enter", "through": "enter",
+    "messages": "messages", "message": "messages", "mail": "messages",
+    "way": "way", "our-way": "way", "ourway": "way", "coding": "way", "code": "way", "how": "way"
+  };
+
+  var addressBar = document.getElementById("addressBar");
+  var statusPage = document.getElementById("statusPage");
+  var btnBack = document.getElementById("btnBack");
+  var btnFwd  = document.getElementById("btnFwd");
+
+  var historyStack = ["board"];
+  var historyIdx = 0;
+  var current = "board";
+
+  function showPage(name, attemptedUrl){
+    current = name;
+    var sections = document.querySelectorAll(".page");
+    for (var i = 0; i < sections.length; i++){
+      sections[i].classList.toggle("active", sections[i].id === "page-" + name);
+    }
+    var tabs = document.querySelectorAll(".tab");
+    for (var t = 0; t < tabs.length; t++){
+      tabs[t].setAttribute("aria-selected", tabs[t].getAttribute("data-page") === name ? "true" : "false");
+    }
+    var url = PAGES[name].url || attemptedUrl || "revenant://?";
+    addressBar.value = url;
+    statusPage.textContent = url;
+    btnBack.disabled = historyIdx <= 0;
+    btnFwd.disabled = historyIdx >= historyStack.length - 1;
+    var vp = document.querySelector(".viewport");
+    if (vp) vp.scrollTop = 0;
+    window.scrollTo(0, 0);
+  }
+
+  function navigate(name){
+    if (name === current && historyStack[historyIdx] === name) { showPage(name); return; }
+    historyStack = historyStack.slice(0, historyIdx + 1);
+    historyStack.push(name);
+    historyIdx = historyStack.length - 1;
+    showPage(name);
+  }
+
+  function navigateAttempt(raw){
+    var key = String(raw || "").trim().toLowerCase()
+      .replace(/^revenant:\/\//, "").replace(/^revenant:/, "")
+      .replace(/\/+$/, "").replace(/\s+/g, "");
+    if (ALIASES.hasOwnProperty(key)) { navigate(ALIASES[key]); return; }
+    historyStack = historyStack.slice(0, historyIdx + 1);
+    historyStack.push("404");
+    historyIdx = historyStack.length - 1;
+    var nf = document.getElementById("nfText");
+    if (nf) nf.textContent = "The address \u201C" + (raw || "") + "\u201D doesn\u2019t match a posted page.";
+    showPage("404", "revenant://" + (key || "?"));
+  }
+
+  var tabs = document.querySelectorAll(".tab");
+  for (var t = 0; t < tabs.length; t++){
+    tabs[t].addEventListener("click", function(){ navigate(this.getAttribute("data-page")); });
+  }
+  document.addEventListener("click", function(e){
+    var el = e.target.closest ? e.target.closest("[data-goto]") : null;
+    if (el) { e.preventDefault(); navigate(el.getAttribute("data-goto")); }
+  });
+  document.getElementById("addressForm").addEventListener("submit", function(e){
+    e.preventDefault(); navigateAttempt(addressBar.value); addressBar.blur();
+  });
+  btnBack.addEventListener("click", function(){
+    if (historyIdx > 0){ historyIdx--; showPage(historyStack[historyIdx]); }
+  });
+  btnFwd.addEventListener("click", function(){
+    if (historyIdx < historyStack.length - 1){ historyIdx++; showPage(historyStack[historyIdx]); }
+  });
+  document.getElementById("btnReload").addEventListener("click", function(){ showPage(current); });
+  document.getElementById("btnHome").addEventListener("click", function(){ navigate("board"); });
+
+  var msgForm = document.getElementById("msgForm");
+  var thread = document.getElementById("thread");
+  var threadEmpty = document.getElementById("threadEmpty");
+  var msgFeedback = document.getElementById("msgFeedback");
+  var msgCount = 0;
+
+  msgForm.addEventListener("submit", function(e){
+    e.preventDefault();
+    var text = document.getElementById("msgText").value.trim();
+    if (!text){ msgFeedback.textContent = "Write the message first — plain words."; return; }
+    var name = document.getElementById("msgName").value.trim() || "A visitor";
+    msgCount++;
+    if (threadEmpty) threadEmpty.style.display = "none";
+
+    var now = new Date();
+    var hh = String(now.getHours()).padStart(2, "0");
+    var mm = String(now.getMinutes()).padStart(2, "0");
+    var num = msgCount;
+    var timeStr = hh + ":" + mm;
+
+    var card = document.createElement("article");
+    card.className = "msg";
+    var who = document.createElement("div");
+    who.className = "who";
+    var b = document.createElement("b"); b.textContent = name;
+    who.appendChild(b);
+    var meta = document.createElement("span");
+    meta.textContent = "MESSAGE #" + num + " · " + timeStr;
+    who.appendChild(meta);
+    var editedMark = document.createElement("span");
+    editedMark.className = "edited-mark";
+    editedMark.textContent = "· edited";
+    editedMark.style.display = "none";
+    who.appendChild(editedMark);
+    var plain = document.createElement("p");
+    plain.className = "plain"; plain.textContent = text;
+
+    var actions = document.createElement("div");
+    actions.className = "msg-actions";
+    var editBtn = document.createElement("button");
+    editBtn.type = "button";
+    editBtn.className = "btn small";
+    editBtn.textContent = "Edit";
+    editBtn.setAttribute("aria-label", "Edit message #" + num);
+    actions.appendChild(editBtn);
+
+    var editBox = document.createElement("div");
+    editBox.className = "msg-edit-box";
+    editBox.style.display = "none";
+    var editLabel = document.createElement("label");
+    editLabel.className = "flabel";
+    editLabel.textContent = "Edit message — plain words";
+    var editArea = document.createElement("textarea");
+    editArea.className = "msg-edit-textarea";
+    editArea.setAttribute("aria-label", "Edit message #" + num);
+    var editActions = document.createElement("div");
+    editActions.className = "msg-edit-actions";
+    var saveBtn = document.createElement("button");
+    saveBtn.type = "button"; saveBtn.className = "btn primary small"; saveBtn.textContent = "Save";
+    var cancelBtn = document.createElement("button");
+    cancelBtn.type = "button"; cancelBtn.className = "btn small"; cancelBtn.textContent = "Cancel";
+    editActions.appendChild(saveBtn); editActions.appendChild(cancelBtn);
+    var editFeedback = document.createElement("div");
+    editFeedback.className = "msg-edit-feedback"; editFeedback.setAttribute("aria-live", "polite");
+    editBox.appendChild(editLabel); editBox.appendChild(editArea); editBox.appendChild(editActions); editBox.appendChild(editFeedback);
+
+    card.appendChild(who); card.appendChild(plain); card.appendChild(actions); card.appendChild(editBox);
+    thread.insertBefore(card, thread.firstChild);
+    if (threadEmpty && threadEmpty.parentNode === thread) thread.appendChild(threadEmpty);
+
+    editBtn.addEventListener("click", function(){
+      editArea.value = plain.textContent;
+      editFeedback.textContent = "";
+      plain.style.display = "none";
+      actions.style.display = "none";
+      editBox.style.display = "block";
+      editArea.focus();
+    });
+    function closeEditor(){
+      editBox.style.display = "none";
+      plain.style.display = "";
+      actions.style.display = "";
+      editFeedback.textContent = "";
+    }
+    cancelBtn.addEventListener("click", closeEditor);
+    saveBtn.addEventListener("click", function(){
+      var next = editArea.value.trim();
+      if (!next){ editFeedback.textContent = "Write the message first — plain words."; editArea.focus(); return; }
+      plain.textContent = next;
+      editedMark.style.display = "";
+      closeEditor();
+      editBtn.focus();
+    });
+
+    document.getElementById("msgText").value = "";
+    msgFeedback.textContent = "Posted to the thread.";
+  });
+
+  showPage("board");
+})();
+</script>
+<div style="text-align:center;padding:10px;font-size:13px;opacity:.75">Hits: <span id="hitcount">…</span></div>
+<script>fetch("https://abacus.jasoncameron.dev/hit/lighthouse-portal/hits").then(function(r){return r.json()}).then(function(d){document.getElementById("hitcount").textContent=d.value}).catch(function(){});</script>
+</body>
+</html>
